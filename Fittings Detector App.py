@@ -19,22 +19,34 @@ class ImageCaptureApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Detect Fittings")
-        self.root.geometry("700x700")
+        self.root.geometry("1280x720")
 
-        self.capture_button = ttk.Button(root, text="Click Image", command=self.capture_image)
-        self.capture_button.pack(pady=10)
+        # Frame to hold the buttons horizontally
+        self.button_frame = tk.Frame(root)
+        self.button_frame.pack(pady=10)
 
-        self.flag_button = ttk.Button(root, text="Flag Image", command=self.flag_image)
-        self.flag_button.pack(pady=10)
+        self.capture_button = ttk.Button(self.button_frame, text="Click Image", command=self.capture_image)
+        self.capture_button.pack(side="left", padx=5)
+
+        self.flag_button = ttk.Button(self.button_frame, text="Flag Image", command=self.flag_image)
+        self.flag_button.pack(side="left", padx=5)
         self.flag_button.config(state=tk.DISABLED)  # Disabled by default
 
-        self.exit_button = ttk.Button(root, text="Exit App", command=self.exit_app)
-        self.exit_button.pack()
+        self.exit_button = ttk.Button(self.button_frame, text="Exit App", command=self.exit_app)
+        self.exit_button.pack(side="left", padx=5)
+
+        # Frame to hold the camera feed and detected image side by side
+        self.image_frame = tk.Frame(root)
+        self.image_frame.pack(pady=10)
 
         # Initialize camera
         self.cap = cv2.VideoCapture(0)  # 0 for built-in camera, 1 or 2 if camera is connected via USB
-        self.camera_feed_label = tk.Label(root)
-        self.camera_feed_label.pack()
+        self.camera_feed_label = tk.Label(self.image_frame)
+        self.camera_feed_label.pack(side="left", padx=10)
+
+        # Label to display the last detected image
+        self.detected_image_label = tk.Label(self.image_frame)
+        self.detected_image_label.pack(side="left", padx=10)
 
         self.update_camera_feed()
 
@@ -79,9 +91,12 @@ class ImageCaptureApp:
             # Detect objects in the captured image
             detected_image, detected_items = self.detect_objects(image_path)
 
-            # Display the detected image
-            cv2.imshow('Objects Detected', detected_image)
-            cv2.waitKey(0)
+            # Display the detected image in the GUI
+            detected_image_rgb = cv2.cvtColor(detected_image, cv2.COLOR_BGR2RGB)
+            detected_image_pil = Image.fromarray(detected_image_rgb)
+            self.detected_image_photo = ImageTk.PhotoImage(image=detected_image_pil)
+            self.detected_image_label.configure(image=self.detected_image_photo)
+            self.detected_image_label.image = self.detected_image_photo
 
             # Append detected items to the CSV file
             csv_file = self.create_detections_csv()
