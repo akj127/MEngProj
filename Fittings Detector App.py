@@ -48,6 +48,10 @@ class ImageCaptureApp:
         self.detected_image_label = tk.Label(self.image_frame)
         self.detected_image_label.pack(side="left", padx=10)
 
+        # Entry to allow editing detected items
+        self.detected_items_entry = tk.Entry(root, width=100)
+        self.detected_items_entry.pack(pady=5)
+
         self.update_camera_feed()
 
         # Placeholder to store the last captured image path and filename
@@ -59,13 +63,13 @@ class ImageCaptureApp:
         if not os.path.exists(csv_file_path):
             with open(csv_file_path, 'w', newline='') as csvfile:
                 csv_writer = csv.writer(csvfile)
-                csv_writer.writerow(["Image File Name", "Detected Items", "Flagged"])
+                csv_writer.writerow(["Image File Name", "Detected Items", "Edited Detected Items", "Flagged"])
         return csv_file_path
 
-    def append_to_detections_csv(self, csv_file, image_filename, detected_items, flagged="No"):
+    def append_to_detections_csv(self, csv_file, image_filename, detected_items, edited_detected_items="", flagged="No"):
         with open(csv_file, 'a', newline='') as csvfile:
             csv_writer = csv.writer(csvfile)
-            csv_writer.writerow([image_filename, detected_items, flagged])
+            csv_writer.writerow([image_filename, detected_items, edited_detected_items, flagged])
 
     def update_camera_feed(self):
         ret, frame = self.cap.read()
@@ -97,6 +101,10 @@ class ImageCaptureApp:
             self.detected_image_photo = ImageTk.PhotoImage(image=detected_image_pil)
             self.detected_image_label.configure(image=self.detected_image_photo)
             self.detected_image_label.image = self.detected_image_photo
+
+            # Populate the entry box with detected items
+            self.detected_items_entry.delete(0, tk.END)
+            self.detected_items_entry.insert(0, detected_items)
 
             # Append detected items to the CSV file
             csv_file = self.create_detections_csv()
@@ -144,7 +152,8 @@ class ImageCaptureApp:
                 headers = next(csv_reader)
                 for row in csv_reader:
                     if row[0] == self.last_captured_image_filename:
-                        row[2] = "Yes"
+                        row[2] = self.detected_items_entry.get()  # Update edited detected items with user input
+                        row[3] = "Yes"
                     rows.append(row)
 
             # Write back the updated rows to the CSV file
