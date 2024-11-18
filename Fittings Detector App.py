@@ -9,6 +9,7 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 import pyperclip
 import json
+from BoundingApp import create_win
 
 def create_capture_folder():
     folder_name = "Captured_Images"
@@ -45,7 +46,7 @@ class ImageCaptureApp:
         self.image_frame.pack(pady=10)
 
         # Initialize camera
-        self.cap = cv2.VideoCapture(1)  # 0 for built-in camera, 1 or 2 if camera is connected via USB
+        self.cap = cv2.VideoCapture(0)  # 0 for built-in camera, 1 or 2 if camera is connected via USB
         self.camera_feed_label = tk.Label(self.image_frame)
         self.camera_feed_label.pack(side="left", padx=10)
 
@@ -66,6 +67,10 @@ class ImageCaptureApp:
         # Placeholder to store the last captured image path and filename
         self.last_captured_image_path = None
         self.last_captured_image_filename = None
+
+        self.label_button = ttk.Button(self.button_frame, text="Label Image", command=self.label_last_image)
+        self.label_button.pack(side="left", padx=5)
+        self.label_button.config(state=tk.DISABLED)
 
     def create_detections_csv(self):
         csv_file_path = os.path.join("Captured_Images", "Detections.csv")
@@ -141,6 +146,10 @@ class ImageCaptureApp:
             self.last_captured_image_path = image_path  # Store the last captured image path
             self.last_captured_image_filename = image_filename  # Store the last captured image filename
             self.flag_button.config(state=tk.NORMAL)  # Enable flag button
+            self.label_button.config(state=tk.NORMAL)
+    def label_last_image(self):
+        if self.last_captured_image_path:
+            create_win(self.root, image_path=self.last_captured_image_path)
 
     def transform_image(self, image_path):
         image = cv2.imread(image_path)
@@ -168,7 +177,7 @@ class ImageCaptureApp:
 
     def detect_objects(self, image, confidence_threshold=0.5):
         # Model Location, Weights Location
-        model = torch.hub.load('D:\MEngProj\yolov5', 'custom', path='D:\MEngProj\Latest_Weights.pt', source='local')
+        model = torch.hub.load('D:\\MEngProj\\yolov5', 'custom', path='D:\\MEngProj\\Latest_Weights.pt', source='local')
         model.eval()
 
         results = model(image)
